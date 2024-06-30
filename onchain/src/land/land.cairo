@@ -17,15 +17,24 @@ pub mod Land {
     impl OwnableImpl = OwnableComponent::OwnableImpl<ContractState>;
     impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
 
-     #[storage]
-     struct Storage {
+    #[storage]
+    struct Storage {
         #[substorage(v0)]
-        ownable: OwnableComponent::Storage;
-        lands: LegacyMap<felt252, ByteArray>
-     }
+        ownable: OwnableComponent::Storage,
+        lands: LegacyMap<felt252, ByteArray>,
+    }
 
-     
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        #[flat]
+        OwnableEvent: OwnableComponent::Event
+    }
 
-
-
+    #[constructor]
+    fn constructor(ref self: ContractState, owner: ContractAddress) {
+        assert(!owner.is_zero(), ZERO_CALLER_ADDRESS);
+        self.ownable.initializer(owner);
+    // might emit event here 
+    }
 }
