@@ -28,13 +28,43 @@ pub mod Land {
     #[derive(Drop, starknet::Event)]
     enum Event {
         #[flat]
-        OwnableEvent: OwnableComponent::Event
+        OwnableEvent: OwnableComponent::Event,
+        LandRegistered: LandRegistered
     }
+
+    #[derive(Drop, starknet::Event)]
+    struct LandRegistered {
+        pub land_id: felt252,
+        pub land_id_hash: ByteArray,
+    }
+
 
     #[constructor]
     fn constructor(ref self: ContractState, owner: ContractAddress) {
         assert(!owner.is_zero(), ZERO_CALLER_ADDRESS);
         self.ownable.initializer(owner);
     // might emit event here 
+    }
+
+    #[abi(embed_v0)]
+    impl LandImpl of ILands<ContractState> {
+        fn verify_land(self: @TContractState, land_id: felt252) -> LandParams {
+            let land_id_hash = self.lands.read(land_id);
+
+            if (land_id_hash != "0") {
+                let land_details = LandParams { land_id: land_id, land_id_hash: land_id_hash };
+                land_details
+            }
+            let land_details = LandParams { land_id: land_id, land_id_hash: land_id_hash };
+            land_details
+        }
+
+        fn register_land(ref self: TContractState, land_id: felt252, land_id_hash: ByteArray) {
+            self.ownable.assert_only_owner();
+            self.lands.write(land_id, land_id_hash);
+            // dispatch event
+            self.emit(LandRegistered { land_id: land_id, land_id_hash: land_id_hash });
+        // use subgraph to listen to this event emitted
+        }
     }
 }
