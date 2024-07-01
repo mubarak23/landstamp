@@ -62,3 +62,25 @@ fn test_register_land() {
 }
 
 
+#[test]
+#[should_panic(expected: ('Caller is not the owner',))]
+fn test_register_land_with_wrong_owner() {
+    let land_contract_address = __setupdeploy__(OWNER_ADDR);
+    let land_dispatcher = ILandsDispatcher { contract_address: land_contract_address };
+
+    // start_cheat_caller_address(product_contract_address, OWNER_ADDR.try_into().unwrap());
+
+    start_prank(CheatTarget::One(land_contract_address), USER_ONE_ADDR.try_into().unwrap());
+
+    let land_id: felt252 = 1;
+    let land_id_hash: felt252 = 'o3075913f08bfCCDBCEeJz2qY29D';
+
+    land_dispatcher.register_land(land_id, land_id_hash.clone());
+
+    let verified_land = land_dispatcher.verify_land(land_id);
+   //  assert(land_id_hash == verified_land.land_id_hash, 'no lands details found');
+
+    stop_prank(CheatTarget::One(land_contract_address));
+}
+
+
